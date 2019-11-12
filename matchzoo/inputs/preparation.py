@@ -41,7 +41,7 @@ class Preparation(object):
 
     def parse_line_for_quora(self, line, delimiter='","'):
         subs = line.split(delimiter)
-        #print('subs: ', len(subs))
+        # print('subs: ', len(subs))
         # if subs[1]=="qid1":
         #     return
         if 6 != len(subs):
@@ -62,12 +62,13 @@ class Preparation(object):
             # print("", i)
             # line = line.decode('utf8')
             line = line.strip()
-            qid1, qid2, q1, q2, label = self.parse_line_for_quora(line, "\t")
+            qid1, qid2, q1, q2, label = self.parse_line_for_quora(line)
             if q1 != 0:
                 corpus[qid1] = q1
                 corpus[qid2] = q2
                 rels.append((label, qid1, qid2))
         f.close()
+        print(len(corpus))
         return corpus, rels
 
     def run_with_one_corpus(self, file_path):
