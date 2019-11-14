@@ -442,7 +442,7 @@ def main(argv):
     if args.phase == 'train':
         train(config)
     elif args.phase == 'train_anyq':
-        train_anyq()
+        train_anyq(config)
     elif args.phase == 'predict':
         predict(config)
     else:
