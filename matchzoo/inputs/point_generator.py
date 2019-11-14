@@ -9,6 +9,87 @@ from utils.rank_io import *
 from layers import DynamicMaxPooling
 import scipy.sparse as sp
 
+
+
+class PointGeneratorAnyQFormat(object):
+    def __init__(self, config):
+        self.__name = 'PointGeneratorAnyQ'
+        self.config = config
+        rel_file = config['relation_file']
+        self.data = read_anyq_data(filename=rel_file)
+        self.batch_size = config['batch_size']
+        self.data1_maxlen = config['text1_maxlen']
+        self.data2_maxlen = config['text2_maxlen']
+        self.fill_word = config['vocab_size'] - 1
+        self.target_mode = config['target_mode']
+        self.class_num = config['class_num']
+        self.is_train = config['phase'] == 'TRAIN'
+        self.point = 0
+        self.total_rel_num = len(self.data)
+        self.check_list = ['data', 'text1_maxlen', 'text2_maxlen', 'relation_file', 'batch_size',
+                           'vocab_size']
+        if not self.check():
+            raise TypeError('[PointGenerator] parameter check wrong.')
+
+    def check(self):
+        for e in self.check_list:
+            if e not in self.config:
+                print('[%s] Error %s not in config' % (self.__name, e), end='\n')
+                return False
+        return True
+
+    def get_batch(self):
+        if self.point >= self.total_rel_num:
+            return None
+        curr_batch_size = self.batch_size
+        if (not self.is_train) and self.total_rel_num - self.point < self.batch_size:
+            curr_batch_size = self.total_rel_num - self.point
+        X1 = np.zeros((curr_batch_size, self.data1_maxlen), dtype=np.int32)
+        X1_len = np.zeros((curr_batch_size,), dtype=np.int32)
+        X2 = np.zeros((curr_batch_size, self.data2_maxlen), dtype=np.int32)
+        X2_len = np.zeros((curr_batch_size,), dtype=np.int32)
+        if self.target_mode == 'regression':
+            Y = np.zeros((curr_batch_size,), dtype=np.int32)
+        elif self.target_mode == 'classification':
+            Y = np.zeros((curr_batch_size, self.class_num), dtype=np.int32)
+
+        X1[:] = self.fill_word
+        X2[:] = self.fill_word
+        for i in range(curr_batch_size):
+            if self.is_train:
+                label, d1, d2 = random.choice(self.data)
+            else:
+                label, d1, d2 = self.data[self.point]
+                self.point += 1
+            d1_len = min(self.data1_maxlen, len(self.data1[d1]))
+            d2_len = min(self.data2_maxlen, len(self.data2[d2]))
+            X1[i, :d1_len], X1_len[i] = self.data1[d1][:d1_len], d1_len
+            X2[i, :d2_len], X2_len[i] = self.data2[d2][:d2_len], d2_len
+            if self.target_mode == 'regression':
+                Y[i] = label
+            elif self.target_mode == 'classification':
+                Y[i, label] = 1.
+        return X1, X1_len, X2, X2_len, Y
+
+    def get_batch_generator(self):
+        while True:
+            sample = self.get_batch()
+            if not sample:
+                break
+            X1, X1_len, X2, X2_len, Y, ID_pairs = sample
+            if self.config['use_dpool']:
+                yield ({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len,
+                        'dpool_index': DynamicMaxPooling.dynamic_pooling_index(X1_len, X2_len,
+                                                                               self.config['text1_maxlen'],
+                                                                               self.config['text2_maxlen']),
+                        }, Y)
+            else:
+                yield ({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len}, Y)
+
+    def reset(self):
+        self.point = 0
+
+
 class PointGenerator(object):
     def __init__(self, config):
         self.__name = 'PointGenerator'

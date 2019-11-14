@@ -6,6 +6,7 @@ from keras.utils.generic_utils import deserialize_keras_object
 from .point_generator import PointGenerator
 from .point_generator import Triletter_PointGenerator
 from .point_generator import DRMM_PointGenerator
+from .point_generator import PointGeneratorAnyQFormat
 
 from .pair_generator import PairGenerator
 from .pair_generator import Triletter_PairGenerator

@@ -52,6 +52,19 @@ def read_relation(filename, verbose=True):
     return data
 
 
+def read_anyq_data(filename, verbose=True):
+    def str2intlist(text):
+        return list(map(int, text.split(' ')))
+    data = []
+    for line in open(filename):
+        line = line.strip().split('\t')
+        data.append((int(line[2]), str2intlist(line[0]), str2intlist(line[1])))
+    if verbose:
+        print('[%s]\n\tInstance size: %s' % (filename, len(data)), end='\n')
+    return data
+
+
+
 # Read varied-length features without id
 def read_features_without_id(filename, verbose=True):
     features = []
