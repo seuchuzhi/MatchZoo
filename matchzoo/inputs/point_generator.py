@@ -61,10 +61,10 @@ class PointGeneratorAnyQFormat(object):
             else:
                 label, d1, d2 = self.data[self.point]
                 self.point += 1
-            d1_len = min(self.data1_maxlen, len(self.data1[d1]))
-            d2_len = min(self.data2_maxlen, len(self.data2[d2]))
-            X1[i, :d1_len], X1_len[i] = self.data1[d1][:d1_len], d1_len
-            X2[i, :d2_len], X2_len[i] = self.data2[d2][:d2_len], d2_len
+            d1_len = min(self.data1_maxlen, len(d1))
+            d2_len = min(self.data2_maxlen, len(d2))
+            X1[i, :d1_len], X1_len[i] = d1[:d1_len], d1_len
+            X2[i, :d2_len], X2_len[i] = d2[:d2_len], d2_len
             if self.target_mode == 'regression':
                 Y[i] = label
             elif self.target_mode == 'classification':
@@ -76,7 +76,7 @@ class PointGeneratorAnyQFormat(object):
             sample = self.get_batch()
             if not sample:
                 break
-            X1, X1_len, X2, X2_len, Y, ID_pairs = sample
+            X1, X1_len, X2, X2_len, Y = sample
             if self.config['use_dpool']:
                 yield ({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len,
                         'dpool_index': DynamicMaxPooling.dynamic_pooling_index(X1_len, X2_len,
