@@ -26,7 +26,7 @@ class PointGeneratorAnyQFormat(object):
         self.is_train = config['phase'] == 'TRAIN'
         self.point = 0
         self.total_rel_num = len(self.data)
-        self.check_list = ['data', 'text1_maxlen', 'text2_maxlen', 'relation_file', 'batch_size',
+        self.check_list = ['text1_maxlen', 'text2_maxlen', 'relation_file', 'batch_size',
                            'vocab_size']
         if not self.check():
             raise TypeError('[PointGenerator] parameter check wrong.')
